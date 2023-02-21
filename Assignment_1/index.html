@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>DDA 2003/MDS 6112 Assignment 1</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <h1>Sortable Stacked Bar Chart</h1>
+
+    <div class="container">
+        <div class="col-right">
+            <div class="control-bar">
+                <!-- define a drop list with three different visual options -->
+                <!-- To DO -->
+                <select id="islegend">
+                    <option value="vis">show legend</option>
+                    <option value="novis">hide legend</option>
+                </select>
+
+                <select id="display-type-selection">
+                    <option value="Bar">Bar Chart</option>
+                    <option value="Stacked">Stacked Bar Chart</option>
+                    <option value="Sorted">Sorted Stacked Bar Chart</option>
+                </select>
+            </div>
+            <!-- <svg id="legend"></svg> -->
+            <svg id="bar-chart"></svg>
+
+        </div>
+    </div>
+
+    <script src="js/d3.v6.js"></script>
+    <script src="js/stackedBarChart.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>
