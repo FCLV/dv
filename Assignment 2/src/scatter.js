@@ -10,13 +10,13 @@ async function drawScatter() {
     // To DO
     // console.log(dataset)
 
-    // function xAccessor(d) {
-    //     return d['temperatureMax']
-    // }
+    function xAccessor(d) {
+        return d['temperatureMax']
+    }
 
-    // function yAccessor(d) {
-    //     return d['temperatureMin']
-    // }
+    function yAccessor(d) {
+        return d['temperatureMin']
+    }
 
     const colorScaleYear = 2000
     const parseDate = d3.timeParse("%Y-%m-%d")
@@ -73,22 +73,26 @@ async function drawScatter() {
     // To DO
     const xScale = d3.scaleLinear()
         .domain([0, d3.max(dataset, d => d['temperatureMax'])])
-        .range([0, dimensions.width]);
+        .range([0, dimensions.boundedWidth]);
     const yScale = d3.scaleLinear()
-        .domain([0, d3.max(dataset, d => d['temperatureMin'])])
-        .range([0, dimensions.width])
-    const colorScale = d3.scaleSequential(d3.interpolateSinebow)
-    console.log(colorScale);
+        .domain([d3.max(dataset, d => d['temperatureMin']), 0])
+        .range([0, dimensions.boundedHeight]);
+    maxCol = d3.max(dataset, d => Math.abs(colorAccessor(d)));
+    minCol = d3.min(dataset, d => Math.abs(colorAccessor(d)));
+    const colorScale = d3.scaleSequential(d3.interpolateRainbow).domain([maxCol / 1000000, minCol / 1000000]);
     // 5. Draw data 
     // draw data into a scatter plot
     // To DO
-    bounds.append('g').selectAll('dot')
-    .data(dataset)
-    .join("circle")
-        .attr("cx", function (d) { return d['temperatureMax']; } )
-        .attr("cy", function (d) { return d['temperatureMin']; } )
-        .attr("r", 1.5)
-        .style("fill", "#69b3a2");
+    const dotsGroup = bounds.append('g').selectAll('dot')
+        .data(dataset)
+        .join("circle")
+        .attr("cx", function(d) { return xScale(d['temperatureMax']); })
+        .attr("cy", function(d) { return yScale(d['temperatureMin']); })
+        .attr("r", 3)
+        .attr("class", 'dot')
+        .style("fill", function(d) {
+            return colorScale(colorAccessor(d) / 1000000)
+        });
 
     // 6. Draw peripherals
 
@@ -201,12 +205,17 @@ async function drawScatter() {
     const dayDot = hoverElementsGroup.append("circle")
         .attr("class", "tooltip-dot")
 
-    function onVoronoiMouseEnter(e, datum) {
+    // function onVoronoiMouseEnter(e, datum) {
+    //     // Given the mouse event and a datum, you are asked to highlight the data by adding an addtioanl circle and display its information (such as date and temperature).
+    //     // To DO
 
-        //Given the mouse event and a datum, you are asked to highlight the data by adding an addtioanl circle and display its information (such as date and temperature).
+    // }
 
+    function onVoronoiMouseEnter(d) {
+        // Given the mouse event and a datum, you are asked to highlight the data by adding an addtioanl circle and display its information (such as date and temperature).
         // To DO
-
+        tooltip.style("opacity", 1);
+        hoverElementsGroup.style("opacity", 1);
     }
 
     function onVoronoiMouseLeave() {
@@ -232,9 +241,7 @@ async function drawScatter() {
         .attr("y", -6)
 
     function onLegendMouseMove(e) {
-
         // Display the data only when the data are in the selected date range.
-
         // To DO
 
         const isDayWithinRange = d => {

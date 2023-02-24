@@ -10,13 +10,13 @@ async function drawScatter() {
     // To DO
     // console.log(dataset)
 
-    // function xAccessor(d) {
-    //     return d['temperatureMax']
-    // }
+    function xAccessor(d) {
+        return d['temperatureMax']
+    }
 
-    // function yAccessor(d) {
-    //     return d['temperatureMin']
-    // }
+    function yAccessor(d) {
+        return d['temperatureMin']
+    }
 
     const colorScaleYear = 2000
     const parseDate = d3.timeParse("%Y-%m-%d")
@@ -77,28 +77,22 @@ async function drawScatter() {
     const yScale = d3.scaleLinear()
         .domain([d3.max(dataset, d => d['temperatureMin']), 0])
         .range([0, dimensions.boundedHeight]);
-    const colorScale = d3.scaleSequential(d3.interpolateSinebow)
-        .domain([946656000000, 978192000000])
-        .range([0, 10000000000])
-    // console.log(colorScale(colorAccessor(dataset[2])));
-    // console.log(colorScale(colorAccessor(dataset[12])));
-    // console.log(colorScale(colorAccessor(dataset[20])));
-    for (let i in dataset){
-        // console.log(dataset[i]['temperatureMax'], dataset[i]['temperatureMin']);
-        console.log(colorScale(colorAccessor(dataset[i])))
-    }
+    maxCol = d3.max(dataset, d => Math.abs(colorAccessor(d)));
+    minCol = d3.min(dataset, d => Math.abs(colorAccessor(d)));
+    const colorScale = d3.scaleSequential(d3.interpolateRainbow).domain([maxCol / 1000000, minCol / 1000000]);
 
     // 5. Draw data 
     // draw data into a scatter plot
     // To DO
-    bounds.append('g').selectAll('dot')
-    .data(dataset)
-    .join("circle")
-        .attr("cx", function (d) { return xScale(d['temperatureMax']); } )
-        .attr("cy", function (d) { return yScale(d['temperatureMin']); } )
-        .attr("r", 1.5)
-        .style("fill", function (d) {
-            return colorScale(colorAccessor(d))
+    const dotsGroup = bounds.append('g').selectAll('dot')
+        .data(dataset)
+        .join("circle")
+        .attr("cx", function(d) { return xScale(d['temperatureMax']); })
+        .attr("cy", function(d) { return yScale(d['temperatureMin']); })
+        .attr("r", 3)
+        .attr("class", 'dot')
+        .style("fill", function(d) {
+            return colorScale(colorAccessor(d) / 1000000)
         });
 
     // 6. Draw peripherals
@@ -129,6 +123,106 @@ async function drawScatter() {
         .attr("x", -dimensions.boundedHeight / 2)
         .attr("y", -dimensions.margin.left + 10)
         .html("Maximum Temperature (&deg;F)")
+
+    const legendGroup = bounds.append("g")
+        .attr("transform", `translate(${
+        dimensions.boundedWidth - dimensions.legendWidth - 9
+      },${
+        dimensions.boundedHeight - 37
+      })`)
+
+    const defs = wrapper.append("defs")
+
+    const numberOfGradientStops = 10
+    const stops = d3.range(numberOfGradientStops).map(i => (
+        i / (numberOfGradientStops - 1)
+    ))
+    const legendGradientId = "legend-gradient"
+    const gradient = defs.append("linearGradient")
+        .attr("id", legendGradientId)
+        .selectAll("stop")
+        .data(stops)
+        .join("stop")
+        .attr("stop-color", d => d3.interpolateRainbow(-d))
+        .attr("offset", d => `${d * 100}%`)
+
+    const legendGradient = legendGroup.append("rect")
+        .attr("height", dimensions.legendHeight)
+        .attr("width", dimensions.legendWidth)
+        .style("fill", `url(#${legendGradientId})`)
+
+    const tickValues = [
+        d3.timeParse("%m/%d/%Y")(`4/1/${colorScaleYear}`),
+        d3.timeParse("%m/%d/%Y")(`7/1/${colorScaleYear}`),
+        d3.timeParse("%m/%d/%Y")(`10/1/${colorScaleYear}`),
+    ]
+    const legendTickScale = d3.scaleLinear()
+        .domain(colorScale.domain())
+        .range([0, dimensions.legendWidth])
+
+    const legendValues = legendGroup.selectAll(".legend-value")
+        .data(tickValues)
+        .join("text")
+        .attr("class", "legend-value")
+        .attr("x", legendTickScale)
+        .attr("y", -6)
+        .text(d3.timeFormat("%b"))
+
+    const legendValueTicks = legendGroup.selectAll(".legend-tick")
+        .data(tickValues)
+        .join("line")
+        .attr("class", "legend-tick")
+        .attr("x1", legendTickScale)
+        .attr("x2", legendTickScale)
+        .attr("y1", 6)
+
+    // Set up interactions
+
+    // create voronoi for tooltips
+
+
+    const tooltip = d3.select("#tooltip")
+
+
+    // add two mouse actions on the legend
+    legendGradient.on("mousemove", onLegendMouseMove)
+        .on("mouseleave", onLegendMouseLeave)
+
+    const legendHighlightBarWidth = dimensions.legendWidth * 0.05
+    const legendHighlightGroup = legendGroup.append("g")
+        .attr("opacity", 0)
+    const legendHighlightBar = legendHighlightGroup.append("rect")
+        .attr("class", "legend-highlight-bar")
+        .attr("width", legendHighlightBarWidth)
+        .attr("height", dimensions.legendHeight)
+
+    const legendHighlightText = legendHighlightGroup.append("text")
+        .attr("class", "legend-highlight-text")
+        .attr("x", legendHighlightBarWidth / 2)
+        .attr("y", -6)
+
+    function onLegendMouseMove(e) {
+        // Display the data only when the data are in the selected date range.
+        // To DO
+
+        const isDayWithinRange = d => {
+            // Given a datum, judge whether the datum is in a datum range. Return True or False. 
+            // To DO
+        }
+
+
+    }
+
+    function onLegendMouseLeave() {
+        dotsGroup.selectAll(".dot")
+            .transition().duration(500)
+            .style("opacity", 1)
+            .attr("r", 4)
+
+        legendValues.style("opacity", 1)
+        legendValueTicks.style("opacity", 1)
+        legendHighlightGroup.style("opacity", 0)
+    }
 
 }
 drawScatter()
