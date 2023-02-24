@@ -8,7 +8,7 @@ async function drawScatter() {
 
     // Get data attributes, i.e. xAccessor for max temperature and yAccessor for min temperature 
     // To DO
-    console.log(dataset)
+    // console.log(dataset)
 
     // function xAccessor(d) {
     //     return d['temperatureMax']
@@ -77,13 +77,18 @@ async function drawScatter() {
     const yScale = d3.scaleLinear()
         .domain([0, d3.max(dataset, d => d['temperatureMin'])])
         .range([0, dimensions.width])
-
+    const colorScale = d3.scaleSequential(d3.interpolateSinebow)
+    console.log(colorScale);
     // 5. Draw data 
-
     // draw data into a scatter plot
-
     // To DO
-
+    bounds.append('g').selectAll('dot')
+    .data(dataset)
+    .join("circle")
+        .attr("cx", function (d) { return d['temperatureMax']; } )
+        .attr("cy", function (d) { return d['temperatureMin']; } )
+        .attr("r", 1.5)
+        .style("fill", "#69b3a2");
 
     // 6. Draw peripherals
 
