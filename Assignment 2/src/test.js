@@ -172,25 +172,17 @@ async function drawScatter() {
         .attr("y1", 6)
 
     // Set up interactions
-    // create voronoi for tooltips? No need.
     const tooltip = d3.select("#tooltip");
     const dayDot = d3.select("#tooltip-dot")
         .append('circle')
         .attr('opacity', 0);
-    
+    console.log('2')
     var mousemove = function(e, d){
         tooltip.style('opacity', 1)
-            .style('left', xScale(d['temperatureMax'])-20 + 'px')
-            .style('top', yScale(d['temperatureMin'])-8 + 'px')
+            .style('left', xScale(d['temperatureMax'])-40 + 'px')
+            .style('top', yScale(d['temperatureMin'])+20 + 'px')
             .html('Temp:' + d['temperatureMin'] + '&deg;F - ' + d['temperatureMax'] + '&deg;F<br>Date:' + d['date']);
         
-        dayDot.attr('opacity', 1)
-            .attr("cx", xScale(d['temperatureMax']))
-            .attr("cy", yScale(d['temperatureMin']))
-            .attr("r", 6)
-            .style("fill", '#5758BB')
-            .style('left', xScale(d['temperatureMax'])-20 + 'px')
-            .style('top', yScale(d['temperatureMin'])-8 + 'px');
     };
     var mouseleave = function(e, d){
         tooltip.style("opacity", 0)
@@ -208,8 +200,9 @@ async function drawScatter() {
         .on("mouseleave", onLegendMouseLeave);
 
     const legendHighlightBarWidth = dimensions.legendWidth * 0.05
+    
     const x_to_legend = d3.scaleLinear()
-        .domain([368, 617])
+        .domain([645, 894])
         .range([0, legendGradient.attr('width')-legendHighlightBarWidth]);
 
     const date_to_legend = d3.scaleLinear()
@@ -234,7 +227,6 @@ async function drawScatter() {
         .attr("y", -6)
         .html("here")
     
-    console.log('2')
     function onLegendMouseMove(e) {
         // Display the data only when the data are in the selected date range.
         // To DO
@@ -242,6 +234,7 @@ async function drawScatter() {
         // for (x in legendHighlightBar){
         //     console.log(x)
         // }
+        // console.log(e.x)
         legendHighlightBar.attr('x', x_to_legend(e.x))
         legendHighlightText.attr('x', x_to_legend(e.x+5))
         const leftidx = parseInt(legend_to_365(x_to_legend(e.x)))
