@@ -138,7 +138,7 @@ async function drawScatter() {
         .selectAll("stop")
         .data(stops)
         .join("stop")
-        .attr("stop-color", d => d3.interpolateRainbow(-d))
+        .attr("stop-color", d => d3.interpolateRainbow(d * 0.65))
         .attr("offset", d => `${d * 100}%`)
 
     const legendGradient = legendGroup.append("rect")
@@ -182,7 +182,7 @@ async function drawScatter() {
         tooltip.style('opacity', 1)
             .style('left', xScale(d['temperatureMax'])-20 + 'px')
             .style('top', yScale(d['temperatureMin'])-8 + 'px')
-            .html('Temp:' + d['temperatureMin'] + '-' + d['temperatureMax'] + '<br>Date:' + d['date']);
+            .html('Temp:' + d['temperatureMin'] + '&deg;F - ' + d['temperatureMax'] + '&deg;F<br>Date:' + d['date']);
         
         dayDot.attr('opacity', 1)
             .attr("cx", xScale(d['temperatureMax']))
