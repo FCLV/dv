@@ -204,18 +204,18 @@ async function drawScatter() {
 
     const dayDot = hoverElementsGroup.append("circle")
         .attr("class", "tooltip-dot")
-
-    // function onVoronoiMouseEnter(e, datum) {
-    //     // Given the mouse event and a datum, you are asked to highlight the data by adding an addtioanl circle and display its information (such as date and temperature).
-    //     // To DO
-
-    // }
-
-    function onVoronoiMouseEnter(d) {
+    console.log('1');
+    function onVoronoiMouseEnter(e, datum) {
         // Given the mouse event and a datum, you are asked to highlight the data by adding an addtioanl circle and display its information (such as date and temperature).
         // To DO
-        tooltip.style("opacity", 1);
-        hoverElementsGroup.style("opacity", 1);
+        tooltip.style('opacity', 1)
+            .style('left', xScale(datum['temperatureMax'])-20 + 'px')
+            .style('top', yScale(datum['temperatureMin'])-8 + 'px')
+            .html('MaxTemp:' + datum['temperatureMax']
+            + '<br>MinTemp:' + datum['temperatureMin']
+            + '<br>Date:' + datum['date']);
+        hoverElementsGroup.style("opacity", 1)
+        tooltip.style("opacity", 1)
     }
 
     function onVoronoiMouseLeave() {

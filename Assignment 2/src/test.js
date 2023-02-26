@@ -3,24 +3,19 @@ async function drawScatter() {
     // 1. Access data
 
     const dataset = await d3.json("./data/my_weather_data.json")
-
+    const dateArr = new Array()
+    for (i in dataset){
+        dateArr.push(dataset[i].date)
+    }
     // set data constants
 
     // Get data attributes, i.e. xAccessor for max temperature and yAccessor for min temperature 
     // To DO
     // console.log(dataset)
 
-    function xAccessor(d) {
-        return d['temperatureMax']
-    }
-
-    function yAccessor(d) {
-        return d['temperatureMin']
-    }
-
     const colorScaleYear = 2000
     const parseDate = d3.timeParse("%Y-%m-%d")
-    const colorAccessor = d => parseDate(d.date).setYear(colorScaleYear)
+    const colorAccessor = d => parseDate(d.date).setYear(colorScaleYear) / 5e10
 
     // Create chart dimensions
 
@@ -79,24 +74,24 @@ async function drawScatter() {
         .range([0, dimensions.boundedHeight]);
     maxCol = d3.max(dataset, d => Math.abs(colorAccessor(d)));
     minCol = d3.min(dataset, d => Math.abs(colorAccessor(d)));
-    const colorScale = d3.scaleSequential(d3.interpolateRainbow).domain([maxCol / 1000000, minCol / 1000000]);
+    const colorScale = d3.scaleSequential(d3.interpolateRainbow)
 
     // 5. Draw data 
     // draw data into a scatter plot
     // To DO
-    const dotsGroup = bounds.append('g').selectAll('dot')
+    var dotGroup = bounds.append('g').selectAll('circle')
         .data(dataset)
         .join("circle")
         .attr("cx", function(d) { return xScale(d['temperatureMax']); })
         .attr("cy", function(d) { return yScale(d['temperatureMin']); })
-        .attr("r", 3)
+        .attr("r", 4)
         .attr("class", 'dot')
+        .attr('date', function(d) { return yScale(d['date']); })
         .style("fill", function(d) {
-            return colorScale(colorAccessor(d) / 1000000)
+            return colorScale(colorAccessor(d))
         });
 
     // 6. Draw peripherals
-
     const xAxisGenerator = d3.axisBottom()
         .scale(xScale)
         .ticks(4)
@@ -177,18 +172,55 @@ async function drawScatter() {
         .attr("y1", 6)
 
     // Set up interactions
-
-    // create voronoi for tooltips
-
-
-    const tooltip = d3.select("#tooltip")
-
+    // create voronoi for tooltips? No need.
+    const tooltip = d3.select("#tooltip");
+    const dayDot = d3.select("#tooltip-dot")
+        .append('circle')
+        .attr('opacity', 0);
+    
+    var mousemove = function(e, d){
+        tooltip.style('opacity', 1)
+            .style('left', xScale(d['temperatureMax'])-20 + 'px')
+            .style('top', yScale(d['temperatureMin'])-8 + 'px')
+            .html('Temp:' + d['temperatureMin'] + '-' + d['temperatureMax'] + '<br>Date:' + d['date']);
+        
+        dayDot.attr('opacity', 1)
+            .attr("cx", xScale(d['temperatureMax']))
+            .attr("cy", yScale(d['temperatureMin']))
+            .attr("r", 6)
+            .style("fill", '#5758BB')
+            .style('left', xScale(d['temperatureMax'])-20 + 'px')
+            .style('top', yScale(d['temperatureMin'])-8 + 'px');
+    };
+    var mouseleave = function(e, d){
+        tooltip.style("opacity", 0)
+        d3.select(this)
+            .style("stroke", "none")
+            .style("opacity", 0.8)
+    };
+    
+    bounds.selectAll('.dot')
+        .on('mousemove', mousemove)
+        .on('mouseleave', mouseleave)
 
     // add two mouse actions on the legend
     legendGradient.on("mousemove", onLegendMouseMove)
-        .on("mouseleave", onLegendMouseLeave)
+        .on("mouseleave", onLegendMouseLeave);
 
     const legendHighlightBarWidth = dimensions.legendWidth * 0.05
+    const x_to_legend = d3.scaleLinear()
+        .domain([368, 617])
+        .range([0, legendGradient.attr('width')-legendHighlightBarWidth]);
+
+    const date_to_legend = d3.scaleLinear()
+        .domain([parseDate('2018-01-01').setYear(colorScaleYear), parseDate('2018-12-31').setYear(colorScaleYear)])
+        .range([0, legendGradient.attr('width')-legendHighlightBarWidth]);
+
+    const legend_to_365 = d3.scaleLinear()
+        .domain([0, legendGradient.attr('width')-legendHighlightBarWidth])
+        .range([0, 365]);
+    // console.log(date_to_legend(parseDate('2018-12-31').setYear(colorScaleYear)))
+
     const legendHighlightGroup = legendGroup.append("g")
         .attr("opacity", 0)
     const legendHighlightBar = legendHighlightGroup.append("rect")
@@ -200,22 +232,53 @@ async function drawScatter() {
         .attr("class", "legend-highlight-text")
         .attr("x", legendHighlightBarWidth / 2)
         .attr("y", -6)
-
+        .html("here")
+    
+    console.log('2')
     function onLegendMouseMove(e) {
         // Display the data only when the data are in the selected date range.
         // To DO
+        legendHighlightGroup.style('opacity', 1)
+        // for (x in legendHighlightBar){
+        //     console.log(x)
+        // }
+        legendHighlightBar.attr('x', x_to_legend(e.x))
+        legendHighlightText.attr('x', x_to_legend(e.x+5))
+        const leftidx = parseInt(legend_to_365(x_to_legend(e.x)))
+        const rightidx = parseInt(legend_to_365(x_to_legend(e.x) + legendHighlightBarWidth))
+        legendHighlightText.html(dateArr[leftidx] + ' to ' + dateArr[Math.min(rightidx, 364)])
+        
+        d3.selectAll('.dot').remove()
+        bounds.append('g').selectAll('circle')
+            .data(dataset)
+            .join("circle")
+            .attr("cx", function(d) { return xScale(d['temperatureMax']); })
+            .attr("cy", function(d) { return yScale(d['temperatureMin']); })
+            .attr("r", function(d) { return isDayWithinRange(d); })
+            .style("opacity", function(d) {return isDayWithinRange(d) / 10;})
+            .attr("class", 'dot')
+            .attr('date', function(d) { return yScale(d['date']); })
+            .style("fill", function(d) {
+                return colorScale(colorAccessor(d))
+            });
+        bounds.selectAll('.dot')
+            .on('mousemove', mousemove)
+            .on('mouseleave', mouseleave)
 
-        const isDayWithinRange = d => {
-            // Given a datum, judge whether the datum is in a datum range. Return True or False. 
-            // To DO
+        function isDayWithinRange(d){
+            var dateValue =  legend_to_365(date_to_legend(parseDate(d.date).setYear(colorScaleYear)))
+            if(dateValue <= rightidx && dateValue >= leftidx){
+                return 7;
+            }
+            else{
+                return 2;
+            }
         }
-
-
     }
 
     function onLegendMouseLeave() {
-        dotsGroup.selectAll(".dot")
-            .transition().duration(500)
+        d3.selectAll(".dot")
+            // .transition().duration(500)
             .style("opacity", 1)
             .attr("r", 4)
 
@@ -225,4 +288,5 @@ async function drawScatter() {
     }
 
 }
+
 drawScatter()

@@ -85,6 +85,7 @@ circle {
     stroke: #6F1E51;
     stroke-width: 2px;
     opacity: 1;
+    position: absolute;
     pointer-events: none;
 }
 
