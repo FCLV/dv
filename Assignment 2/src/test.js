@@ -144,10 +144,10 @@ async function drawScatter() {
     const legendGradient = bounds.append("rect")
         .attr("height", dimensions.legendHeight)
         .attr("width", dimensions.legendWidth)
-        // .attr('x', dimensions.boundedWidth - dimensions.legendWidth)
-        // .attr('y', dimensions.boundedHeight - dimensions.legendHeight)
-        .attr('x', 0)
-        .attr('y', 0)
+        .attr('x', dimensions.boundedWidth - dimensions.legendWidth)
+        .attr('y', dimensions.boundedHeight - dimensions.legendHeight)
+        // .attr('x', 0)
+        // .attr('y', 0)
         .style("fill", `url(#${legendGradientId})`)
 
     const tickValues = [
@@ -211,28 +211,28 @@ async function drawScatter() {
 
     const date_to_legend = d3.scaleLinear()
         .domain([parseDate('2018-01-01').setYear(colorScaleYear), parseDate('2018-12-31').setYear(colorScaleYear)])
-        .range([0, legendGradient.attr('width')]);
+        .range([dimensions.boundedWidth - dimensions.legendWidth, dimensions.boundedWidth]);
 
     const legend_to_365 = d3.scaleLinear()
-        .domain([0, legendGradient.attr('width')])
+        .domain([dimensions.boundedWidth - dimensions.legendWidth, dimensions.boundedWidth])
         .range([0, 365]);
 
     const legendHighlightBar = bounds.append("rect")
         .attr("class", "legend-highlight-bar")
-        // .attr('x', dimensions.boundedWidth - dimensions.legendWidth)
-        // .attr('y', dimensions.boundedHeight - dimensions.legendHeight)
-        .attr('x', 0)
-        .attr('y', 0)
+        .attr('x', dimensions.boundedWidth - dimensions.legendWidth)
+        .attr('y', dimensions.boundedHeight - dimensions.legendHeight)
+        // .attr('x', 0)
+        // .attr('y', 0)
         .attr("width", legendHighlightBarWidth)
         .attr("height", dimensions.legendHeight)
         .style('opacity', 0)
 
     const legendHighlightText = bounds.append("text")
         .attr("class", "legend-highlight-text")
-        // .attr('x', dimensions.boundedWidth - dimensions.legendWidth)
-        // .attr('y', dimensions.boundedHeight - dimensions.legendHeight)
-        .attr('x', 0)
-        .attr('y', 0)
+        .attr('x', dimensions.boundedWidth - dimensions.legendWidth)
+        .attr('y', dimensions.boundedHeight - dimensions.legendHeight)
+        // .attr('x', 0)
+        // .attr('y', 0)
         .style('opacity', 0)
         .html("here")
 
@@ -242,7 +242,6 @@ async function drawScatter() {
         legendHighlightBar.style('opacity', 1)
         legendHighlightText.style('opacity', 1)
         temp = dimensions.legendWidth + parseFloat(legendGradient.attr('x'))
-        console.log(legendGradient.attr('x'), temp, e.layerX - 50)
 
         legendHighlightBar.attr('x', e.layerX - 50)
         legendHighlightText.attr('x', e.layerX - 50)
