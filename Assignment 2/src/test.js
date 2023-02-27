@@ -4,7 +4,7 @@ async function drawScatter() {
 
     const dataset = await d3.json("./data/my_weather_data.json")
     const dateArr = new Array()
-    for (i in dataset){
+    for (i in dataset) {
         dateArr.push(dataset[i].date)
     }
     // set data constants
@@ -119,12 +119,12 @@ async function drawScatter() {
         .attr("y", -dimensions.margin.left + 10)
         .html("Maximum Temperature (&deg;F)")
 
-    const legendGroup = bounds.append("g")
-        .attr("transform", `translate(${
-        dimensions.boundedWidth - dimensions.legendWidth - 9
-      },${
-        dimensions.boundedHeight - 37
-      })`)
+    // const legendGroup = bounds.append("g")
+    //     .attr("transform", `translate(${
+    //     dimensions.boundedWidth - dimensions.legendWidth - 9
+    //   },${
+    //     dimensions.boundedHeight - 37
+    //   })`)
 
     const defs = wrapper.append("defs")
 
@@ -141,9 +141,13 @@ async function drawScatter() {
         .attr("stop-color", d => d3.interpolateRainbow(d * 0.65))
         .attr("offset", d => `${d * 100}%`)
 
-    const legendGradient = legendGroup.append("rect")
+    const legendGradient = bounds.append("rect")
         .attr("height", dimensions.legendHeight)
         .attr("width", dimensions.legendWidth)
+        // .attr('x', dimensions.boundedWidth - dimensions.legendWidth)
+        // .attr('y', dimensions.boundedHeight - dimensions.legendHeight)
+        .attr('x', 0)
+        .attr('y', 0)
         .style("fill", `url(#${legendGradientId})`)
 
     const tickValues = [
@@ -155,7 +159,7 @@ async function drawScatter() {
         .domain(colorScale.domain())
         .range([0, dimensions.legendWidth])
 
-    const legendValues = legendGroup.selectAll(".legend-value")
+    const legendValues = bounds.selectAll(".legend-value")
         .data(tickValues)
         .join("text")
         .attr("class", "legend-value")
@@ -163,7 +167,7 @@ async function drawScatter() {
         .attr("y", -6)
         .text(d3.timeFormat("%b"))
 
-    const legendValueTicks = legendGroup.selectAll(".legend-tick")
+    const legendValueTicks = bounds.selectAll(".legend-tick")
         .data(tickValues)
         .join("line")
         .attr("class", "legend-tick")
@@ -177,20 +181,20 @@ async function drawScatter() {
         .append('circle')
         .attr('opacity', 0);
     console.log('2')
-    var mousemove = function(e, d){
+    var mousemove = function(e, d) {
         tooltip.style('opacity', 1)
-            .style('left', xScale(d['temperatureMax'])-40 + 'px')
-            .style('top', yScale(d['temperatureMin'])+20 + 'px')
+            .style('left', xScale(d['temperatureMax']) - 40 + 'px')
+            .style('top', yScale(d['temperatureMin']) + 20 + 'px')
             .html('Temp:' + d['temperatureMin'] + '&deg;F - ' + d['temperatureMax'] + '&deg;F<br>Date:' + d['date']);
-        
+
     };
-    var mouseleave = function(e, d){
+    var mouseleave = function(e, d) {
         tooltip.style("opacity", 0)
         d3.select(this)
             .style("stroke", "none")
             .style("opacity", 0.8)
     };
-    
+
     bounds.selectAll('.dot')
         .on('mousemove', mousemove)
         .on('mouseleave', mouseleave)
@@ -200,47 +204,52 @@ async function drawScatter() {
         .on("mouseleave", onLegendMouseLeave);
 
     const legendHighlightBarWidth = dimensions.legendWidth * 0.05
-    
+
     const x_to_legend = d3.scaleLinear()
-        .domain([645, 894])
-        .range([0, legendGradient.attr('width')-legendHighlightBarWidth]);
+        .domain([0, width])
+        .range([parseFloat(legendGradient.attr('x')), parseFloat(legendGradient.attr('x')) + dimensions.legendWidth]);
 
     const date_to_legend = d3.scaleLinear()
         .domain([parseDate('2018-01-01').setYear(colorScaleYear), parseDate('2018-12-31').setYear(colorScaleYear)])
-        .range([0, legendGradient.attr('width')-legendHighlightBarWidth]);
+        .range([0, legendGradient.attr('width')]);
 
     const legend_to_365 = d3.scaleLinear()
-        .domain([0, legendGradient.attr('width')-legendHighlightBarWidth])
+        .domain([0, legendGradient.attr('width')])
         .range([0, 365]);
-    // console.log(date_to_legend(parseDate('2018-12-31').setYear(colorScaleYear)))
 
-    const legendHighlightGroup = legendGroup.append("g")
-        .attr("opacity", 0)
-    const legendHighlightBar = legendHighlightGroup.append("rect")
+    const legendHighlightBar = bounds.append("rect")
         .attr("class", "legend-highlight-bar")
+        // .attr('x', dimensions.boundedWidth - dimensions.legendWidth)
+        // .attr('y', dimensions.boundedHeight - dimensions.legendHeight)
+        .attr('x', 0)
+        .attr('y', 0)
         .attr("width", legendHighlightBarWidth)
         .attr("height", dimensions.legendHeight)
+        .style('opacity', 0)
 
-    const legendHighlightText = legendHighlightGroup.append("text")
+    const legendHighlightText = bounds.append("text")
         .attr("class", "legend-highlight-text")
-        .attr("x", legendHighlightBarWidth / 2)
-        .attr("y", -6)
+        // .attr('x', dimensions.boundedWidth - dimensions.legendWidth)
+        // .attr('y', dimensions.boundedHeight - dimensions.legendHeight)
+        .attr('x', 0)
+        .attr('y', 0)
+        .style('opacity', 0)
         .html("here")
-    
+
     function onLegendMouseMove(e) {
         // Display the data only when the data are in the selected date range.
         // To DO
-        legendHighlightGroup.style('opacity', 1)
-        // for (x in legendHighlightBar){
-        //     console.log(x)
-        // }
-        // console.log(e.x)
-        legendHighlightBar.attr('x', x_to_legend(e.x))
-        legendHighlightText.attr('x', x_to_legend(e.x+5))
-        const leftidx = parseInt(legend_to_365(x_to_legend(e.x)))
-        const rightidx = parseInt(legend_to_365(x_to_legend(e.x) + legendHighlightBarWidth))
+        legendHighlightBar.style('opacity', 1)
+        legendHighlightText.style('opacity', 1)
+        temp = dimensions.legendWidth + parseFloat(legendGradient.attr('x'))
+        console.log(legendGradient.attr('x'), temp, e.layerX - 50)
+
+        legendHighlightBar.attr('x', e.layerX - 50)
+        legendHighlightText.attr('x', e.layerX - 50)
+        const leftidx = parseInt(legend_to_365(e.layerX - 50))
+        const rightidx = parseInt(legend_to_365(e.layerX - 50 + legendHighlightBarWidth))
         legendHighlightText.html(dateArr[leftidx] + ' to ' + dateArr[Math.min(rightidx, 364)])
-        
+
         d3.selectAll('.dot').remove()
         bounds.append('g').selectAll('circle')
             .data(dataset)
@@ -248,7 +257,7 @@ async function drawScatter() {
             .attr("cx", function(d) { return xScale(d['temperatureMax']); })
             .attr("cy", function(d) { return yScale(d['temperatureMin']); })
             .attr("r", function(d) { return isDayWithinRange(d); })
-            .style("opacity", function(d) {return isDayWithinRange(d) / 10;})
+            .style("opacity", function(d) { return isDayWithinRange(d) / 10; })
             .attr("class", 'dot')
             .attr('date', function(d) { return yScale(d['date']); })
             .style("fill", function(d) {
@@ -258,12 +267,11 @@ async function drawScatter() {
             .on('mousemove', mousemove)
             .on('mouseleave', mouseleave)
 
-        function isDayWithinRange(d){
-            var dateValue =  legend_to_365(date_to_legend(parseDate(d.date).setYear(colorScaleYear)))
-            if(dateValue <= rightidx && dateValue >= leftidx){
+        function isDayWithinRange(d) {
+            var dateValue = legend_to_365(date_to_legend(parseDate(d.date).setYear(colorScaleYear)))
+            if (dateValue <= rightidx && dateValue >= leftidx) {
                 return 7;
-            }
-            else{
+            } else {
                 return 2;
             }
         }
@@ -275,9 +283,9 @@ async function drawScatter() {
             .style("opacity", 1)
             .attr("r", 4)
 
-        legendValues.style("opacity", 1)
-        legendValueTicks.style("opacity", 1)
-        legendHighlightGroup.style("opacity", 0)
+        legendHighlightBar.style("opacity", 0)
+        legendHighlightText.style("opacity", 0)
+            // legendHighlightGroup.style("opacity", 0)
     }
 
 }
