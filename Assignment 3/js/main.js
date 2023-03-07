@@ -12,6 +12,6 @@ d3.json('data/miserables.json').then(data => {
             height: 1000,
             // invalidation // a promise to stop the simulation when the cell is re-run
         });
-        console.log('1')
+        console.log('2')
     })
     .catch(error => console.error(error));

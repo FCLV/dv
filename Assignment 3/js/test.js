@@ -50,7 +50,6 @@ function ForceDirectedGraph({
         }
         dict[p1 + ',' + p2] = 1
     }
-    console.log(dict)
 
     // Compute default domains.
     if (G && nodeGroups === undefined) nodeGroups = d3.sort(G);
@@ -88,7 +87,8 @@ function ForceDirectedGraph({
         .attr("stroke-linecap", linkStrokeLinecap)
         .selectAll("line")
         .data(links)
-        .join("line");
+        .join("line")
+        .attr('class', 'lk');
 
     const node = bounds.append("g")
         .attr("fill", nodeFill)
@@ -100,24 +100,64 @@ function ForceDirectedGraph({
         .join("circle")
         .attr("class", "dot")
         .attr("r", nodeRadius)
-        // .call(mousemove(d))
-        // .call(mouseleave())
         .call(drag(simulation));
 
-    // node.append('title').text('here!!!')
-
-    const tooltip = d3.select("#tooltip")
+    bounds.append("g")
+        .selectAll('text')
+        .data(nodes)
+        .join('text')
+        .style('font-weight', 500)
+        .style('font-family', 'Arial')
+        .style('fill', 'black')
+        .attr('class', 'tt')
+        .text(d => d.id)
+        .style('opacity', 0)
 
     d3.selectAll('.dot')
-        .on('mousemove', function(e, d) {
-            tooltip.style('opacity', 1)
-                .style("top", (e.y) + "px")
-                .style("left", (e.x) + "px")
-                .html(d.id);
-            // console.log(d.id)
+        .on('mousemove', function(e, datum) {
+            d3.selectAll('.dot')
+                .style('opacity', function(d) { return isConnected(d) })
+            d3.selectAll('.tt')
+                .style('opacity', function(d) { return isConnected(d) == 1 ? 1 : 0 })
+                .attr('x', d => d.x)
+                .attr('y', d => d.y)
+            d3.selectAll('.lk')
+                .style('opacity', function(d) { return isLinked(d) })
+
+            // whether the d and datum are connected
+            function isConnected(d) {
+                let p1, p2
+                if (d.id < datum.id) {
+                    p1 = d.id
+                    p2 = datum.id
+                } else {
+                    p1 = datum.id
+                    p2 = d.id
+                }
+
+                if (p1 == p2) {
+                    return 1
+                } else if (dict[p1 + ',' + p2] == 1) {
+                    return 1
+                } else {
+                    return 0.2
+                }
+            }
+
+            // whether d is the link whose source/target is datum
+            function isLinked(d) {
+                if (d.source.id == datum.id || d.target.id == datum.id) {
+                    return 1
+                } else {
+                    return 0.2
+                }
+            }
+
         })
         .on('mouseleave', function() {
-            tooltip.style("opacity", 0)
+            d3.selectAll('.tt').style('opacity', 0)
+            d3.selectAll('.dot').style('opacity', 1)
+            d3.selectAll('.lk').style('opacity', 1)
         })
 
 
